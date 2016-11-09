@@ -74,7 +74,7 @@ def main():
           return 1
     	
     count = 0
-    newFilename = 'quartet'+sys.argv[2]+'.txt'
+    newFilename = 'allQuartets'+sys.argv[2]+'.txt'
     quartet_file = open(newFilename, 'w')
 
 
