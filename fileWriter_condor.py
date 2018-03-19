@@ -67,7 +67,8 @@ class fileWriter:
                 matrix_found = True
             
             if matrix_found:
-		propTaxaName = re.match("^\s*([^\s-]*)\s",line)			#added 24 Aug 2016 by SJH
+		propTaxaName = re.match("^\s*([^\s]*)\s",line)			#added 24 Aug 2016 by SJH  
+		                                                                #changed from "^\s*([^\s-]*)\s" on 19 Mar 2018 by SJH
                 if propTaxaName:					       	#added 24 Aug 2016 by SJH
 			propTaxaName = propTaxaName.group(1)			#added 24 Aug 2016 by SJH
 		else:								#added 24 Aug 2016 by SJH
