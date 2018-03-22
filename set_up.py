@@ -27,8 +27,8 @@ def main():
     #      Allow interleaved files
     #  Difference in 2.0.6 - small changes to further improve diagnostics
     #  Difference in 2.0.7 - add disk/memory reqs for finish and organize
-	#  Difference in 2.0.8 - add "_$(jobname)" and "requirements = ( Machine =!= "fl-cssc-b217-7.net.wisc.edu" )" on Build RUN_MRBAYES JOB submit and Build RUN_BUCKY JOB submit 
-
+    #  Difference in 2.0.8 - add "_$(jobname)" and "requirements = ( Machine =!= "fl-cssc-b217-7.net.wisc.edu" )" on Build RUN_MRBAYES JOB submit and Build RUN_BUCKY JOB submit 
+    #  Difference in 2.0.9 - change request_memory from 1GB to 25MB
 
     
     instanceID = uuid.uuid4()
@@ -335,7 +335,7 @@ def main():
     st += "Output = out/organize.out\n"
     st += "Error  = err/organize.err\n\n"
 
-    st += "Request_memory = 1GB\n"
+    st += "Request_memory = 25MB\n"
     st += "Request_disk   = 50000\n\n"
 
     st += "should_transfer_files   = YES\n"
@@ -426,7 +426,7 @@ def main():
       st += "Error  = err/run_mrbayes_$(jobname).err\n\n"
     st += "+WantFlocking  = true\n"
     st += "+WantGlideIn   = true\n"
-    st += "Request_memory = 1GB\n"
+    st += "Request_memory = 25MB\n"
     st += "Request_disk   = 50000\n\n"
     st += '''requirements = ( Machine =!= "fl-cssc-b217-7.net.wisc.edu" )\n'''
     st += "should_transfer_files = YES\n"
@@ -484,7 +484,7 @@ def main():
       st += "Error  = err/run_bucky_$(jobname).err\n\n"
     st += "+WantFlocking  = true\n"
     st += "+WantGlideIn   = true\n"
-    st += "Request_memory = 1GB\n"
+    st += "Request_memory = 25MB\n"
     st += "Request_disk   = 5000\n\n"
     st += '''requirements = ( Machine =!= "fl-cssc-b217-7.net.wisc.edu" )\n'''
     st += "should_transfer_files = YES\n"
@@ -528,7 +528,7 @@ def main():
     st += "Log    = log/finish.log\n"
     st += "Output = out/finish.out\n"
     st += "Error  = err/finish.err\n"
-    st += "Request_memory = 1GB\n"
+    st += "Request_memory = 25MB\n"
     st += "Request_disk   = 50000\n\n"
     st += "should_transfer_files = YES\n"
     st += "when_to_transfer_output = ON_EXIT\n\n"
