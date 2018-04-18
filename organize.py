@@ -1,18 +1,19 @@
 #!/usr/bin/python
-#version 2.0.5
+#version 2.0.6
 
 import os,re,optparse,tarfile,shutil,random
 from fileReader_condor import *
 from quartet_condor import *
 from arguments import *
 
-def translate_quartets(ref_dict, quartet_file_name):
+def translate_quartets(ref_dict, quartet_file_name, outputSuffix):
     quartet_file = open(quartet_file_name, 'r')
-    new_quartet_file = open('quartets.txt', 'w');
+    new_quartet_file = open('quartets'+outputSuffix+'.txt', 'w');
     kount = 0
     for line in quartet_file:
         replacement_line = ""
         first_word = True
+        add_quartet = True
         for word in line.split():
             if( first_word != True): replacement_line += " "
             found_it = False
@@ -20,10 +21,9 @@ def translate_quartets(ref_dict, quartet_file_name):
                 if v == word:
                      replacement_line += str(k)
                      found_it = True
-            if( found_it == False ):
-                return False
+            if( found_it == False ): add_quartet = False 
             first_word = False
-        new_quartet_file.write(replacement_line+'\n');
+        if( add_quartet): new_quartet_file.write(replacement_line+'\n');
         kount += 1
     new_quartet_file.close()
     quartet_file.close()
@@ -42,12 +42,14 @@ def quart_file_is_codes(quartet_file_name):
 
     return True
 
-def write_translate_table(ref_dict):
+def write_translate_table(ref_dict, outputSuffix):
     '''
     Writes a translate table for all taxa
     :Input: A reference dictionary containing number/species-name pairs
     '''
-    translate_file =  open("translate.txt", 'w')
+    translate_filename = 'translate' + outputSuffix + '.txt'
+    translate_file = open(translate_filename, 'w')
+
     kount = 0
     for k, v in ref_dict.items():
         translate_file.write(str(k) + "\t" + v + "\n")
@@ -55,12 +57,13 @@ def write_translate_table(ref_dict):
     translate_file.close()
     return kount
 
-def write_gene_table(ref_dict):
+def write_gene_table(ref_dict, outputSuffix):
     '''
     Writes a translate table for all genes
     :Input: A reference dictionary containing genes
     '''
-    gene_file =  open("genes.txt", 'w')
+    gene_filename = "genes" + outputSuffix + ".txt"
+    gene_file =  open(gene_filename, 'w')
     kount = 0
     for k, v in ref_dict.items():
         gene_file.write(str(k) + "\t" + v + "\n")
@@ -134,39 +137,41 @@ def main():
             gene_count += 1
 
     #write a translate table for reference
-    numTaxa = write_translate_table(taxa_dict)
-    out += "- translate.txt written for " + str(numTaxa) + " taxa.\n"
+    numTaxa = write_translate_table(taxa_dict, options.outputSuffix)
+    out += "- translate" + options.outputSuffix + ".txt written for " + str(numTaxa) + " taxa.\n"
+
 
     #write a gene table
-    numGenes = write_gene_table(gene_dict)
-    out += "- genes.txt written for " + str(numGenes) + " genes.\n"
+    numGenes = write_gene_table(gene_dict, options.outputSuffix)
+    out += "- genes" + options.outputSuffix + ".txt written for " + str(numGenes) + " genes.\n"
 
 
     #find the list of quartets to analyze
     q = quartet()
+    quartet_filename = "quartets" + options.outputSuffix + ".txt"
     #use a user-specified list if given
     if (options.list_of_quartets != None):
-        if (options.list_of_quartets == "quartets.txt"):
-            print "Quartet file cannot be named <quartets.txt>; that filename reserved.  Please rename."
+        if (options.list_of_quartets == quartet_filename):
+            print "Quartet file cannot be named <"+quartet_filename+">; that filename reserved.  Please rename."
             return 1
         #open up user-specified file, if simply codes, rename if necessary and continue.
         is_codes = quart_file_is_codes(options.list_of_quartets)
         if(  is_codes ):
-            shutil.copyfile(options.list_of_quartets, "quartets.txt")
-            out += "- quartets.txt copied from " + options.list_of_quartets + ".\n"
+            shutil.copyfile(options.list_of_quartets, quartet_filename)
+            out += "- "+quartet_filename+" copied from " + options.list_of_quartets + ".\n"
             num_quartets = 0
-            with open('quartets.txt', 'r') as input:
+            with open(quartets_filename, 'r') as input:
                 for line in input:
                     num_quartets += 1
 
         else:
-            num_quartets = translate_quartets(taxa_dict, options.list_of_quartets)
+            num_quartets = translate_quartets(taxa_dict, options.list_of_quartets, options.outputSuffix)
             if( num_quartets == False):
                 print "Error: supplied quartets file could not be translated."
                 return 1
         #Now subsample from file.
         if( options.num_quartets != 0 ):
-            num_lines = sum(1 for line in open('quartets.txt'))
+            num_lines = sum(1 for line in open(quartet_filename))
             if( options.num_quartets > num_lines  ):
                 print "Error: requested quartets more than quartets in file."
                 return 1
@@ -174,21 +179,21 @@ def main():
             myQuartets.sort()
             curQ = 0
             curLine = 0
-            with open('quartets.txt', 'r') as input:
+            with open(quartet_filename, 'r') as input:
                 with open('xquartets.txt', 'w') as output: 
                     for line in input:
                         curLine=curLine+1;
                         if (curLine in myQuartets):
                             output.write(line)
-            os.remove("quartets.txt")
-            os.rename("xquartets.txt", "quartets.txt")
-            out += "- quartets.txt written for " + str(options.num_quartets) + " quartets given in " + options.list_of_quartets + ".\n"
+            os.remove(quartet_filename)
+            os.rename("xquartets.txt", quartet_filename)
+            out += "- "+quartet_filename+" written for " + str(options.num_quartets) + " quartets given in " + options.list_of_quartets + ".\n"
         else:
-            out += "- quartets.txt written for " + str(num_quartets) + " quartets given in " + options.list_of_quartets + ".\n"
+            out += "- "+quartet_filename+" written for " + str(num_quartets) + " quartets given in " + options.list_of_quartets + ".\n"
             
     #pick random quartets if no user-specified list
     else:
-        quart_file = open("quartets.txt", 'w')
+        quart_file = open(quartet_filename, 'w')
         for i in range(options.num_quartets):
             rand_taxa = q.pick_random_quartet(len(taxa_dict))
             #print rand_taxa
@@ -196,7 +201,7 @@ def main():
                 quart_file.write(str(num) + " ")
             quart_file.write("\n")
         quart_file.close()
-        out += "- quartets.txt written for " + str(options.num_quartets) + " random quartets.\n"
+        out += "- "+quartet_filename+" written for " + str(options.num_quartets) + " random quartets.\n"
 
     output_file =  open("organize.meta", 'w')
     output_file.write(out)

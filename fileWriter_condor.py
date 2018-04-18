@@ -1,5 +1,5 @@
 #fileWriter_condor.py
-#version 2.0.5
+#version 2.0.6
 
 import re,os,sys
 from errorcodes import *
@@ -188,7 +188,7 @@ class fileWriter:
         else:
             return findErrorCode("fileWriter_condor: Less than four taxa found")
             
-    def add_to_output_file(self, cf_dict, ciLow_dict, ciHigh_dict, which_taxa):
+    def add_to_output_file(self, cf_dict, ciLow_dict, ciHigh_dict, which_taxa, outputSuffix):
         '''
         Adds a line of data to the output.csv file
         :Input: The concordance_factor dictionary containing the concordance factors associated with specific splits,
@@ -207,11 +207,11 @@ class fileWriter:
         line += str(ciHigh_dict["{1,3|2,4}"]) + ","
         line += str(ciLow_dict["{1,4|2,3}"]) + ","
         line += str(ciHigh_dict["{1,4|2,3}"]) + "\n"
-        output_file = open("QuartetAnalysis.csv", 'a')
+        output_file = open("QuartetAnalysis"+outputSuffix+".csv", 'a')
         output_file.write(line)
         output_file.close()
 
-    def add_to_supple_file(self, genestring, quartet_taxa):
+    def add_to_supple_file(self, genestring, quartet_taxa, outputSuffix):
         '''
         Adds a line of data to the QuartetAnalysis.supple file
         :Input: the quartet taxa and the gene data previously written (gene #, prob (1,2), prob (1,3), prob (1,4)
@@ -221,6 +221,6 @@ class fileWriter:
         for num in quartet_taxa:
             line += str(num) + ","
         line += genestring
-        output_file = open("QuartetAnalysis.supple", 'a')
+        output_file = open("QuartetAnalysis"+outputSuffix+".supple", 'a')
         output_file.write(line)
         output_file.close()

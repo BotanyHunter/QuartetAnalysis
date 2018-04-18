@@ -1,5 +1,5 @@
 #Arguments.py
-#version 2.0.5
+#version 2.0.6
 
 import os, optparse
 
@@ -34,6 +34,7 @@ def buildArgList(whichArgs, options, gene_file):
     if( "s" in whichArgs ): args += " -s " + str(options.nst)
     if( "t" in whichArgs ): args += " -t " + str(options.testing)
     if( "u" in whichArgs ): args += " -u " + str(options.burnin)
+    if( "v" in whichArgs ): args += " -v " + str(options.outputSuffix)
     if( "x" in whichArgs ): args += " -x " + str(options.num_genegroups)
     if( "y" in whichArgs ): args += " -y $(jobname)"
     if( "z" in whichArgs ): args += " -z " + str(options.data_is_zipped)
@@ -60,6 +61,7 @@ def getParser():
     parser.add_option('-q', '--num_quartets', dest = 'num_quartets', type = 'int', default = 0, help = 'Number of 4-taxon sets to be analyzed')
     parser.add_option('-t', '--test', dest = 'testing', type='int', default = 0, help = 'Set to 1 to not delete .err, .out, .log files')
     parser.add_option('-u', '--burnin', dest = 'burnin', type = 'float', default = '0.25', help = 'Burnin frequency for mrBayes and BUCKy')
+    parser.add_option('-v', '--output_suffix', dest='outputSuffix', default='', help = 'suffix to add to output filenames')
     parser.add_option('-w', '--quartet', dest='quartet',help='4-taxon set')
     parser.add_option('-x', '--num_genegroups', dest='num_genegroups',type='int', default=1, help='File containing genes to consider')
     parser.add_option('-y', '--condor_job_name', dest='condor_job_name', default = '', help = 'used internally to pass information')

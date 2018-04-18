@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#version 2.0.4
+#version 2.0.5
 import sys,os,optparse,tarfile
 from arguments import *
 from append_output import *
@@ -48,7 +48,7 @@ def main():
 
         file_finish.write("- Deleted files. (test options = "+str(options.testing)+")\n")
         file_finish.close()
-        return_value = append_output("finish.meta","QuartetAnalysis.meta")
+        return_value = append_output("finish.meta","QuartetAnalysis"+options.outputSuffix+".meta")
         os.system('rm -rf organize.meta finish.meta')
         return return_value
 

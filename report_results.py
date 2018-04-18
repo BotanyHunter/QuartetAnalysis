@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#version 2.0.6
+#version 2.0.7
 
 import sys,os, fcntl
 from append_output import *
@@ -18,8 +18,14 @@ def main():
     except:
         return findErrorCode("report_results: missing job name")
 
+    try:
+        outputSuffix    = sys.argv[3]
+    except:
+        return findErrorCode("report_results: missing output suffix")
+
+
     if( return_value != 0 ):
-        myfile = open("QuartetAnalysis.meta", "r+")
+        myfile = open("QuartetAnalysis"+outputSuffix+".meta", "r+")
         fcntl.flock(myfile,fcntl.LOCK_EX)
         myfile.seek(0,2)    #end of file
         if( sys.argv[1] == "-1002" ):
@@ -32,7 +38,7 @@ def main():
            return 0
 
     try:
-        test_option    = int(sys.argv[4])
+        test_option    = int(sys.argv[5])
     except:
         return findErrorCode("report_results: missing test code")
 
@@ -49,12 +55,12 @@ def main():
 
 
     try:
-        myfile = open("QuartetAnalysis.meta", "r+")
+        myfile = open("QuartetAnalysis"+outputSuffix+".meta", "r+")
         fcntl.flock(myfile, fcntl.LOCK_EX)
         filelines = myfile.readlines()
     except:
         myfile.close()
-        return findErrorCode("report_results: Could not open QuartetAnalysis.meta")
+        return findErrorCode("report_results: Could not open QuartetAnalysis metafile")
 
     try:
         myfile.seek(0)
@@ -78,7 +84,7 @@ def main():
         myfile.close()
     except:
         myfile.close()
-        return findErrorCode("report_results: Could not interpret QuartetAnalysis.meta")
+        return findErrorCode("report_results: Could not interpret QuartetAnalysis metafile")
 
     if test_option == 0:
         try:

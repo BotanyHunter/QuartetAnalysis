@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#version 2.0.5
+#version 2.0.6
 
 import sys,os
 from append_output import *
@@ -13,12 +13,17 @@ def main():
     except:
         return findErrorCode("post_organize: missing node return status")
 
+    try:
+        outputSuffix    = sys.argv[2]
+    except:
+        return findErrorCode("post_organize: missing output suffix")
+
 
     if( return_value != "0" ):
         return findErrorCode("post_organize: organize.submit returned a non-zero value")
 
     try:
-        myfile = open("QuartetAnalysis.meta", "r")
+        myfile = open("QuartetAnalysis"+outputSuffix+".meta", "r")
         filelines = myfile.readlines()
         myfile.close()
         results = [0,0]
@@ -37,11 +42,11 @@ def main():
                 results[1] = info[0]
             numRuns = str(int(results[0]) * int(results[1]))
     except:
-        return findErrorCode("post_organize: Could not interpret QuartetAnalysis.meta")
+        return findErrorCode("post_organize: Could not interpret QuartetAnalysis metafile")
 
     try:
-        append_output("organize.meta", "QuartetAnalysis.meta")
-        with open("QuartetAnalysis.meta", "a") as myfile:
+        append_output("organize.meta", "QuartetAnalysis"+outputSuffix+".meta")
+        with open("QuartetAnalysis"+outputSuffix+".meta", "a") as myfile:
             myfile.write("\n")
             myfile.write("Run MrBayes and BUCKy:\n")
             myfile.write("   \t\t# Genes\t# Quart\t# ExpRs\t# Compl\t# NoErr\t# StD>>\t# Tax<4\t# MBErr\n")
@@ -49,7 +54,7 @@ def main():
             myfile.write(" - BUCKy:\t\t" + results[1] + "\t"+ results[1]+"\t0\t0\t\t0\n")
         myfile.close()
     except:
-        return findErrorCode("post_organize: Could not update QuartetAnalysis.meta")
+        return findErrorCode("post_organize: Could not update QuartetAnalysis metafile")
 
     return findErrorCode('no error')
 

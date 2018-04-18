@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#version 2.0.5
+#version 2.0.6
 
 import sys,re,os,fcntl
 from errorcodes import *
@@ -16,10 +16,16 @@ def main():
     except:
         return findErrorCode("delete_mb_output: missing job name")
 
+    try:
+        outputSuffix = sys.argv[3]
+    except:
+        return findErrorCode("delete_mb_output: missing output suffix")
+
+
     if( return_value != 0                                                            and 
         return_value != findErrorCode("run_bucky.py: mrBayes/mbsum results too few") and
         return_value != findErrorCode("run_bucky.py: mrBayes/mbsum results empty")       ):
-        myfile = open("QuartetAnalysis.meta", "r+")
+        myfile = open("QuartetAnalysis"+outputSuffix+".meta", "r+")
         fcntl.flock(myfile,fcntl.LOCK_EX)
         myfile.seek(0,2)
         myfile.write("ERROR in " + jobname + ": " + errorString(return_value) +"\n")
@@ -33,11 +39,11 @@ def main():
         return findErrorCode("delete_mb_output: error finding quartet index")
 
     try:
-        myfile = open("QuartetAnalysis.meta", "r+")
+        myfile = open("QuartetAnalysis"+outputSuffix+".meta", "r+")
         fcntl.flock(myfile, fcntl.LOCK_EX)
         filelines = myfile.readlines()
     except:
-        return findErrorCode("delete_mb_output: Could not open QuartetAnalysis.meta")
+        return findErrorCode("delete_mb_output: Could not open QuartetAnalysis metafile")
 
     try:
         myfile.seek(0)
@@ -58,7 +64,7 @@ def main():
         myfile.close()
     except:
         myfile.close()
-        return findErrorCode("delete_mb_output: Could not interpret QuartetAnalysis.meta")
+        return findErrorCode("delete_mb_output: Could not interpret QuartetAnalysis metafile")
 
     try:
         os.unlink("run_quartets+QUARTET_"+str(quartet_index)+"+run_bucky.tar.gz")

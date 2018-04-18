@@ -13,7 +13,7 @@ Builds several files - the overarching quartets_analysis.dag
 '''
 def main():
 
-    current_version = "#version 2.0.8"
+    current_version = "#version 2.0.10"
     #  Difference in 2.0.3 - is that fileWriter_condor.py
     #      has been corrected to look for species names
     #      only at the beginning of the record.
@@ -28,7 +28,9 @@ def main():
     #  Difference in 2.0.6 - small changes to further improve diagnostics
     #  Difference in 2.0.7 - add disk/memory reqs for finish and organize
     #  Difference in 2.0.8 - add "_$(jobname)" and "requirements = ( Machine =!= "fl-cssc-b217-7.net.wisc.edu" )" on Build RUN_MRBAYES JOB submit and Build RUN_BUCKY JOB submit 
-    #  Difference in 2.0.9 - change request_memory from 1GB to 25MB
+    #  Difference in 2.0.9 - reduce request_memory to 25MB down from 1GB
+    #  Difference in 2.0.10 - organize.py (ver. 2.0.6) if taxon in allQuartets not in translate, then quartet ignored instead of process stopped.
+    #                       - arguments.py + many others - added output file suffixes
 
     
     instanceID = uuid.uuid4()
@@ -152,6 +154,7 @@ def main():
 
     out += "Other pipeline arguments:\n"
     out += "- allowed failure percent (-c): " + str(options.failure_percent) + "\n"
+    out += "- output file suffix (-v): " + str(options.outputSuffix) + "\n"
     out += "- will intermediate files be retained (-t): " + TF(options.testing) + ", t=" + str(options.testing) + "\n\n"
 
     out += "MrBayes arguments:\n"
@@ -180,21 +183,22 @@ def main():
     out += " - size of mbsum exe: " + str(mbsum_size) + "\n\n"
     
     out += "Checking versions of python scripts:\n"
-    latest_version = {"organize.py":"#version 2.0.5",
-                      "post_organize.py":"#version 2.0.5",
-                      "run_mrbayes.py":"#version 2.0.5",
-                      "run_bucky.py":"#version 2.0.5",
-                      "finish.py":"#version 2.0.5",
+    latest_version = {"organize.py":"#version 2.0.6",
+                      "post_organize.py":"#version 2.0.6",
+                      "run_mrbayes.py":"#version 2.0.6",
+                      "run_bucky.py":"#version 2.0.6",
+                      "finish.py":"#version 2.0.6",
                       "fileReader_condor.py":"#version 2.0.5",
-                      "fileWriter_condor.py":"#version 2.0.5",
+                      "fileWriter_condor.py":"#version 2.0.6",
                       "quartet_condor.py":"#version 2.0.2",
                       "append_output.py":"#version 2.0.2",
-                      "arguments.py":"#version 2.0.5",
+                      "arguments.py":"#version 2.0.6",
                       "zip_conc_output.py":"#version 2.0.2",
                       "zip_mb_output.py":"#version 2.0.5",
-                      "report_results.py":"#version 2.0.6",
-                      "delete_mb_output.py":"#version 2.0.5",
-                      "delete_files.py":"#version 2.0.4"}
+                      "report_results.py":"#version 2.0.7",
+                      "delete_mb_output.py":"#version 2.0.6",
+                      "delete_files.py":"#version 2.0.5",
+                      "errorcodes.py":"#version 2.0.6"}
 
     
     file_error = False
@@ -297,20 +301,20 @@ def main():
     #Build QUARTET_ANALYSIS dag
     dg  = "#instanceID="+str(instanceID)+"\n"
     dg += "#Overarching DAG to run quartet_analysis.  To be submitted by user.\n\n"
-    dg += "CONFIG QuartetAnalysis.config\n\n"
-    dg += "JOB    organize     organize.submit\n"
-    dg += "SPLICE run_quartets run_quartets.dag\n"
-    dg += "JOB    finish       finish.submit\n\n"
-    dg += "SCRIPT POST organize post_organize.py $RETURN\n"
+    dg += "CONFIG QuartetAnalysis"+options.outputSuffix+".config\n\n"
+    dg += "JOB    organize     organize"+options.outputSuffix+".submit\n"
+    dg += "SPLICE run_quartets run_quartets"+options.outputSuffix+".dag\n"
+    dg += "JOB    finish       finish"+options.outputSuffix+".submit\n\n"
+    dg += "SCRIPT POST organize post_organize.py $RETURN "+options.outputSuffix+"\n"
     dg += "SCRIPT PRE  finish   zip_conc_output.py\n"
-    dg += "SCRIPT POST finish   delete_files.py $RETURN -t " + str(options.testing) + "\n\n"
+    dg += "SCRIPT POST finish   delete_files.py $RETURN -t " + str(options.testing) + " -v " + options.outputSuffix + "\n\n"
     dg += "PARENT organize     CHILD run_quartets\n"
     dg += "PARENT run_quartets CHILD finish\n"
-    dag_file = open('QuartetAnalysis.dag', 'w')
+    dag_file = open('QuartetAnalysis'+options.outputSuffix+'.dag', 'w')
     dag_file.write(dg)
     dag_file.close()
 
-    out += "- quartet_analysis.dag\n"
+    out += "- QuartetAnalysis"+options.outputSuffix+".dag\n"
 
     #Build CONFIG file
     dg  = "#instanceID="+str(instanceID)+"\n"
@@ -319,11 +323,11 @@ def main():
       dg += "DAGMAN_VERBOSITY=3\n\n"
     else:
       dg += "DAGMAN_VERBOSITY=1\n\n"
-    dag_file = open('QuartetAnalysis.config', 'w')
+    dag_file = open('QuartetAnalysis'+options.outputSuffix+'.config', 'w')
     dag_file.write(dg)
     dag_file.close()
 
-    out += "- quartet_analysis.dag\n"
+    out += "- QuartetAnalysis"+options.outputSuffix+".config\n"
 
     #Build ORGANIZE JOB submit
     st  = "#instanceID="+str(instanceID)+"\n"
@@ -353,47 +357,47 @@ def main():
     if (options.list_of_files != None): st += ",$(BDIR)/" + options.list_of_files
     st+= "\n\n"
     
-    st += "Arguments = " + buildArgList("felqzti", options, gene_directory)
+    st += "Arguments = " + buildArgList("felqztiv", options, gene_directory)
     st += "\nQueue\n"
     
-    submit_file = open('organize.submit', 'w')
+    submit_file = open('organize'+options.outputSuffix+'.submit', 'w')
     submit_file.write(st)
     submit_file.close()
 
-    out += "- organize.submit\n"
+    out += "- organize"+options.outputSuffix+".submit\n"
 
 
     #Build RUN_QUARTETS dag
     dg  = "#instanceID="+str(instanceID)+"\n"
     dg += "#This dag set up to run ALL quartets.\n"
-    dg += "#  - it is called by quartet_analysis.dag.\n"
-    dg += "#  - it calls run_quartet.dag to run each individual quartet.\n\n"
+    dg += "#  - it is called by QuartetAnalysis"+options.outputSuffix+".dag.\n"
+    dg += "#  - it calls run_quartet"+options.outputSuffix+".dag to run each individual quartet.\n\n"
     for iQ in range(1,num_quartets+1):
-      dg += "SPLICE QUARTET_"+str(iQ)+" run_quartet.dag\n"
-    dag_file = open('run_quartets.dag', 'w')
+      dg += "SPLICE QUARTET_"+str(iQ)+" run_quartet"+options.outputSuffix+".dag\n"
+    dag_file = open('run_quartets'+options.outputSuffix+'.dag', 'w')
     dag_file.write(dg)
     dag_file.close()
 
-    out += "- run_quartets.dag\n"
+    out += "- run_quartets"+options.outputSuffix+".dag\n"
 
     #Build RUN_QUARTET dag
     dg  = "#instanceID="+str(instanceID)+"\n"
     dg += "#This dag runs an individual quartet.\n"
-    dg += "#  - it is called by run_quartets.dag.\n"
+    dg += "#  - it is called by run_quartets"+options.outputSuffix+".dag.\n"
     dg += "#  - it calls run_genegroups to distribute the MrBayes calcs on subsets of the genes.\n\n"
     dg += "#  - when these finish, it calls BUCKy.\n\n"
     
-    dg += "SPLICE run_genegroups run_genegroups.dag\n"
-    dg += "JOB    run_bucky      run_bucky.submit\n"
+    dg += "SPLICE run_genegroups run_genegroups"+options.outputSuffix+".dag\n"
+    dg += "JOB    run_bucky      run_bucky"+options.outputSuffix+".submit\n"
     dg += 'VARS   run_bucky      jobname = "$(JOB)"\n\n'
     dg += 'SCRIPT PRE  run_bucky zip_mb_output.py $JOB\n'
-    dg += 'SCRIPT POST run_bucky delete_mb_output.py $RETURN $JOB\n\n'
+    dg += 'SCRIPT POST run_bucky delete_mb_output.py $RETURN $JOB '+options.outputSuffix+'\n\n'
     dg += "PARENT run_genegroups CHILD run_bucky\n"
-    dag_file = open('run_quartet.dag', 'w')
+    dag_file = open('run_quartet'+options.outputSuffix+'.dag', 'w')
     dag_file.write(dg)
     dag_file.close()
 
-    out += "- run_quartet.dag\n"
+    out += "- run_quartet"+options.outputSuffix+".dag\n"
     
     #Build RUN_GENEGROUPS dag
     dg  = "#instanceID="+str(instanceID)+"\n"
@@ -401,14 +405,14 @@ def main():
     dg += "#  - it is called by run_quartet.dag.\n"
     dg += "#  - it submits JOBS for each genegroup.\n\n"
     for iG in range(0,num_genegroups):
-      dg += "JOB  gene_group_"+str(iG)+" run_mrbayes.submit\n"
+      dg += "JOB  gene_group_"+str(iG)+" run_mrbayes"+options.outputSuffix+".submit\n"
       dg += 'VARS gene_group_'+str(iG)+' jobname="$(JOB)" data = "D' + str(iG) + '.tar.gz"\n'
-      dg += 'SCRIPT POST gene_group_'+str(iG)+' report_results.py $RETURN $JOB -t '+ str(options.testing) +'\n\n'
-    dag_file = open('run_genegroups.dag', 'w')
+      dg += 'SCRIPT POST gene_group_'+str(iG)+' report_results.py $RETURN $JOB '+options.outputSuffix+' -t '+ str(options.testing) +'\n\n'
+    dag_file = open('run_genegroups'+options.outputSuffix+'.dag', 'w')
     dag_file.write(dg)
     dag_file.close()
 
-    out += "- run_genegroups.dag\n"
+    out += "- run_genegroups"+options.outputSuffix+".dag\n"
 
     #Build RUN_MRBAYES JOB submit
     st  = "#instanceID="+str(instanceID)+"\n"
@@ -444,8 +448,8 @@ def main():
     st += "$(BDIR)/errorcodes.py,"
     st += "$(MRBAYES)/mb,"
     st += "$(BUCKY)/mbsum,"
-    st += "$(BDIR)/translate.txt,"
-    st += "$(BDIR)/quartets.txt,"
+    st += "$(BDIR)/translate"+options.outputSuffix+".txt,"
+    st += "$(BDIR)/quartets"+options.outputSuffix+".txt,"
     st += "$(data)"
     if (options.list_of_quartets != None): st+= "," + options.list_of_quartets
     if (options.list_of_files != None): st += ",$(BDIR)/" + options.list_of_files
@@ -459,14 +463,14 @@ def main():
       st += "\n"
     
     #The genegroups are not launched via queue ##, so replace $PROCESS with $gene group #
-    st += "Arguments = -y $(jobname)" + buildArgList("eusnrcdtmbgzf", options, gene_directory) + "\n\n"
+    st += "Arguments = -y $(jobname)" + buildArgList("eusnrcdtmbgzfv", options, gene_directory) + "\n\n"
     st += "Queue\n"
     
-    submit_file = open('run_mrbayes.submit', 'w')
+    submit_file = open('run_mrbayes'+options.outputSuffix+'.submit', 'w')
     submit_file.write(st)
     submit_file.close()
 
-    out += "- run_mrbayes.submit\n"
+    out += "- run_mrbayes"+options.outputSuffix+".submit\n"
 
     #Build RUN_BUCKY JOB submit
     st  = "#instanceID="+str(instanceID)+"\n"
@@ -496,12 +500,12 @@ def main():
     st += "transfer_input_files = "
     st += "$(BDIR)/run_bucky.py,"
     st += "$(BDIR)/arguments.py,"
-    st += "$(BDIR)/translate.txt,"
-    st += "$(BDIR)/genes.txt,"
+    st += "$(BDIR)/translate"+options.outputSuffix+".txt,"
+    st += "$(BDIR)/genes"+options.outputSuffix+".txt,"
+    st += "$(BDIR)/quartets"+options.outputSuffix+".txt,"
     st += "$(BDIR)/fileReader_condor.py,"
     st += "$(BDIR)/fileWriter_condor.py,"
     st += "$(BDIR)/quartet_condor.py,"
-    st += "$(BDIR)/quartets.txt,"
     st += "$(BDIR)/errorcodes.py,"
     st += "$(BUCKY)/bucky,"
     st += "$(jobname).tar.gz"
@@ -510,14 +514,14 @@ def main():
     #if( options.data_is_zipped ): st += ",$(GENES)"
     st+= "\n\n"
     
-    st += "Arguments = -y $(jobname)" + buildArgList("feujakotbzc", options, gene_directory)
+    st += "Arguments = -y $(jobname)" + buildArgList("feujakotbzcv", options, gene_directory)
     st += "\nQueue\n"
     
-    submit_file = open('run_bucky.submit', 'w')
+    submit_file = open('run_bucky'+options.outputSuffix+'.submit', 'w')
     submit_file.write(st)
     submit_file.close()
 
-    out += "- run_bucky.submit\n"
+    out += "- run_bucky"+options.outputSuffix+".submit\n"
 
     #Build FINISH JOB submit
     st  = "#instanceID="+str(instanceID)+"\n"
@@ -539,27 +543,27 @@ def main():
     st += "$(BDIR)/fileReader_condor.py,"
     st += "$(BDIR)/fileWriter_condor.py,"
     st += "$(BDIR)/quartet_condor.py,"
-    st += "$(BDIR)/translate.txt,"
-    st += "$(BDIR)/quartets.txt,"
+    st += "$(BDIR)/translate"+options.outputSuffix+".txt,"
+    st += "$(BDIR)/quartets"+options.outputSuffix+".txt,"
     st += "$(BDIR)/arguments.py,"
     st += "$(BDIR)/errorcodes.py,"
     st += "$(BDIR)/finish.tar.gz,"
-    st += "$(BDIR)/QuartetAnalysis.meta"
+    st += "$(BDIR)/QuartetAnalysis"+options.outputSuffix+".meta"
     st+= "\n\n"
     
-    st += "Arguments = " + buildArgList("ot", options, gene_directory)
+    st += "Arguments = " + buildArgList("otv", options, gene_directory)
     st += "\nQueue\n"
     
-    submit_file = open('finish.submit', 'w')
+    submit_file = open('finish'+options.outputSuffix+'.submit', 'w')
     submit_file.write(st)
     submit_file.close()
 
-    out += "- summarize.submit\n\n"
+    out += "- summarize"+options.outputSuffix+".submit\n\n"
 
-    output_file = open('QuartetAnalysis.meta', 'w')
+    output_file = open('QuartetAnalysis'+options.outputSuffix+'.meta', 'w')
     output_file.write(out)
     output_file.close()
 
-    print "\n\nProgram set_up finished successfully.\nA summary can be found in QuartetAnalysis.meta\n\n"
+    print "\n\nProgram set_up finished successfully.\nA summary can be found in QuartetAnalysis"+options.outputSuffix+".meta\n\n"
 
 main()

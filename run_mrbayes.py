@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#version 2.0.5
+#version 2.0.6
 import sys, os, subprocess, re, optparse, shutil, tarfile
 from fileReader_condor import *
 from fileWriter_condor import *
@@ -39,25 +39,27 @@ def main():
     #make a list of .mb errors to print out to the .stats file
     mb_error = []
 
-    #make a reference dictionary from the translate.txt file (built by organize.py)
+    #make a reference dictionary from the translate file (built by organize.py)
     ref_dict = {}
+    translate_filename = 'translate' + options.outputSuffix + '.txt'
     try:
-        translate_file = open('translate.txt', 'r')
+        translate_file = open(translate_filename, 'r')
     except:
-        return findErrorCode("mrBayes.py: Could not open translate.txt")
+        return findErrorCode("mrBayes.py: Could not open translate file")
     try:
         for line in translate_file:
             words = line.split()
             ref_dict[int(words[0])] = words[1]
         translate_file.close()
     except:
-        return findErrorCode("mrBayes.py: Could not interpret translate.txt")
+        return findErrorCode("mrBayes.py: Could not interpret translate file")
 
     #get actual quartet
+    quartets_filename = 'quartets' + options.outputSuffix + '.txt'
     try:
-        quartets_file = open("quartets.txt")
+        quartets_file = open(quartets_filename)
     except:
-        return findErrorCode("mrBayes.py: Could not open quartet.txt")
+        return findErrorCode("mrBayes.py: Could not open quartets file")
 
     try:
         for i, quartet in enumerate(quartets_file):
@@ -65,7 +67,7 @@ def main():
                break
         quartet = quartet.split()
     except:
-        return findErrorCode("mrBayes.py: Could not interpret quartet.txt")
+        return findErrorCode("mrBayes.py: Could not interpret quartets file")
 
     #if data file if zipped, reposition
     #if( options.data_is_zipped == 1 ):

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#version 2.0.5
+#version 2.0.6
 import sys, glob, os, re, optparse, tarfile
 from fileReader_condor import *
 from fileWriter_condor import *
@@ -22,8 +22,8 @@ def appendResults(file, geneNumber, probs):
     probs[2] = 100 - probs[0] - probs[1]
     file.write(str(geneNumber) + "," + str(probs[0]) + "," + str(probs[1]) + "," + str(probs[2]) + "\n" )
 
-def getGeneTranslations():
-    geneDictionaryFilename = "genes.txt"
+def getGeneTranslations(outputSuffix):
+    geneDictionaryFilename = "genes"+outputSuffix+".txt"
     geneDictionaryFile = open(geneDictionaryFilename, 'r')
     gene_dict = {}
     for line in geneDictionaryFile:
@@ -62,16 +62,17 @@ def main():
     parser = getParser()
     options, remainder = parser.parse_args()
 
-    #make a reference dictionary from the translate.txt file (built by get_taxa.py)
+    #make a reference dictionary from the translate file (built by get_taxa.py)
     try:
         ref_dict = {}
-        translate_file =  open('translate.txt', 'r')
+        translate_filename = 'translate' + options.outputSuffix + '.txt'
+        translate_file =  open(translate_filename, 'r')
         for line in translate_file:
             words = line.split()
             ref_dict[int(words[0])] = words[1]
         translate_file.close()
     except:
-        return findErrorCode("run_bucky.py: Could not open/interpret translate.txt")
+        return findErrorCode("run_bucky.py: Could not open/interpret translate file")
 
     #the individual quartet to analyze
     try:
@@ -83,14 +84,15 @@ def main():
 
     #make a reference dictionary from genes.txt file (build by organize.py)
     try:
-        gene_dict = getGeneTranslations()
+        gene_dict = getGeneTranslations(options.outputSuffix)
     except:
         return findErrorCode("run_bucky.py: Could not interpret gene file")
     
     
     #get actual quartet
     try:
-        quartets_file = open("quartets.txt")
+        quartets_filename = 'quartets' + options.outputSuffix + '.txt'
+        quartets_file = open(quartets_filename)
         for i, quartet in enumerate(quartets_file):
             if i == (quartet_index - 1):
                break

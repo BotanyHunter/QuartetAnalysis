@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#version 2.0.5
+#version 2.0.6
 import os,re,optparse,tarfile
 from quartet_condor import *
 from fileWriter_condor import *
@@ -53,11 +53,11 @@ def main():
     options, remainder = parser.parse_args()
 
     output_header = "Taxon1,Taxon2,Taxon3,Taxon4,CF12|34,CF13|24,CF14|23,CI12|34Low,CI12|34High,CI13|24Low,CI13|24High,CI14|23Low,CI14|23High\n"
-    output_file =  open("QuartetAnalysis.csv", 'w')
+    output_file =  open("QuartetAnalysis"+options.outputSuffix+".csv", 'w')
     supple_header = "Taxon1,Taxon2,Taxon3,Taxon4,Gene Index,P12|34,P13|24,P14|23\n"
-    supple_file =  open("QuartetAnalysis.supple", 'w')
+    supple_file =  open("QuartetAnalysis"+options.outputSuffix+".supple", 'w')
 
-    metafile = open("QuartetAnalysis.meta", 'r')
+    metafile = open("QuartetAnalysis"+options.outputSuffix+".meta", 'r')
     for line in metafile:
         if line.startswith("- instance ID"):
            output_file.write(line)
@@ -81,12 +81,14 @@ def main():
 
     myQuartets = []
     if( options.maintain_order == 1 ):
-        with open('quartets.txt', 'r') as quartets_file:
+        quartets_filename = 'quartets' + options.outputSuffix + '.txt'
+        with open(quartets_filename, 'r') as quartets_file:
             for quartet_line in quartets_file:
                 myQuartets.append([int(x) for x in quartet_line.split()])
 
     ref_dict = {}
-    translate_file = open('translate.txt', 'r')
+    translate_filename = 'translate' + options.outputSuffix + '.txt'
+    translate_file = open(translate_filename, 'r')
     for line in translate_file:
         words = line.split()
         ref_dict[words[1]] = int(words[0])
@@ -148,7 +150,7 @@ def main():
                       ciHigh = ciHigh1
                       #taxa_set = taxa_set1
             
-              wf.add_to_output_file(d, ciLow, ciHigh, taxa_set1)    #changed from taxa_set on 13 Feb - SJH
+              wf.add_to_output_file(d, ciLow, ciHigh, taxa_set1, options.outputSuffix)    #changed from taxa_set on 13 Feb - SJH
               print "CFs added."
 
 
@@ -163,7 +165,7 @@ def main():
                  newData, taxa_set1 = restore_quartet_order(myDict, taxa_set, myQuartets)
                  newDataString = str(newData["{1,2|3,4}"]) + "," + str(newData["{1,3|2,4}"]) + "," + str(newData["{1,4|2,3}"])
                  outputString = str(myData[0]) +"," + newDataString + "\n"
-                 wf.add_to_supple_file(outputString, taxa_set1)
+                 wf.add_to_supple_file(outputString, taxa_set1, options.outputSuffix)
               txtFile.close()
               print "Gene probabilities added.\n"
 
