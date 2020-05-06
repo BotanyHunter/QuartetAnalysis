@@ -13,7 +13,7 @@ Builds several files - the overarching quartets_analysis.dag
 '''
 def main():
 
-    current_version = "#version 2.0.10"
+    current_version = "#version 2.0.11"
     #  Difference in 2.0.3 - is that fileWriter_condor.py
     #      has been corrected to look for species names
     #      only at the beginning of the record.
@@ -31,6 +31,7 @@ def main():
     #  Difference in 2.0.9 - reduce request_memory to 25MB down from 1GB
     #  Difference in 2.0.10 - organize.py (ver. 2.0.6) if taxon in allQuartets not in translate, then quartet ignored instead of process stopped.
     #                       - arguments.py + many others - added output file suffixes
+    #  Difference in 2.0.11 - increase request memory to 100MB up from 25MB
 
     
     instanceID = uuid.uuid4()
@@ -339,7 +340,7 @@ def main():
     st += "Output = out/organize.out\n"
     st += "Error  = err/organize.err\n\n"
 
-    st += "Request_memory = 25MB\n"
+    st += "Request_memory = 100MB\n"
     st += "Request_disk   = 50000\n\n"
 
     st += "should_transfer_files   = YES\n"
@@ -430,7 +431,7 @@ def main():
       st += "Error  = err/run_mrbayes_$(jobname).err\n\n"
     st += "+WantFlocking  = true\n"
     st += "+WantGlideIn   = true\n"
-    st += "Request_memory = 25MB\n"
+    st += "Request_memory = 100MB\n"
     st += "Request_disk   = 50000\n\n"
     st += '''requirements = ( Machine =!= "fl-cssc-b217-7.net.wisc.edu" )\n'''
     st += "should_transfer_files = YES\n"
@@ -488,7 +489,7 @@ def main():
       st += "Error  = err/run_bucky_$(jobname).err\n\n"
     st += "+WantFlocking  = true\n"
     st += "+WantGlideIn   = true\n"
-    st += "Request_memory = 25MB\n"
+    st += "Request_memory = 100MB\n"
     st += "Request_disk   = 5000\n\n"
     st += '''requirements = ( Machine =!= "fl-cssc-b217-7.net.wisc.edu" )\n'''
     st += "should_transfer_files = YES\n"
@@ -532,7 +533,7 @@ def main():
     st += "Log    = log/finish.log\n"
     st += "Output = out/finish.out\n"
     st += "Error  = err/finish.err\n"
-    st += "Request_memory = 25MB\n"
+    st += "Request_memory = 100MB\n"
     st += "Request_disk   = 50000\n\n"
     st += "should_transfer_files = YES\n"
     st += "when_to_transfer_output = ON_EXIT\n\n"
